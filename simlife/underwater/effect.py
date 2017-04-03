@@ -88,35 +88,48 @@ def generate_ocean_floor(mesh_size):
     zpos = mesh_size / 2.0
     xzstep = mesh_size / mesh_res
 
-    positions = [0] * mesh_res * mesh_res * 3 * 3
+    positions = [0] * mesh_res * mesh_res * 3 * 6
     index = 0
 
     for y in range(mesh_res):
         xpos = -mesh_size / 2.0
         for x in range(mesh_res):
-            # Lower Left
+            # Upper Left
             positions[index] = xpos
             positions[index + 1] = 0
             positions[index + 2] = zpos - xzstep
             index += 3
 
-            # Upper Left
+            # Lower Left
             positions[index] = xpos
             positions[index + 1] = 0
             positions[index + 2] = zpos
             index += 3
 
-            # Lower Left
+            # Upper right
             positions[index] = xpos + xzstep
             positions[index + 1] = 0
             positions[index + 2] = zpos - xzstep
             index += 3
 
-            # Upper Right
-            # positions[index] = xpos + xzstep
-            # positions[index + 1] = 0
-            # positions[index + 2] = zpos
-            # index += 3
+            # Lower Left
+            positions[index] = xpos
+            positions[index + 1] = 0
+            positions[index + 2] = zpos
+            index += 3
+
+            # Lower Right
+            positions[index] = xpos + xzstep
+            positions[index + 1] = 0
+            positions[index + 2] = zpos
+            index += 3
+
+            positions[index] = xpos + xzstep
+            positions[index + 1] = 0
+            positions[index + 2] = zpos - xzstep
+            index += 3
+
+
 
             xpos += xzstep
         zpos -= xzstep

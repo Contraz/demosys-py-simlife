@@ -12,7 +12,7 @@ out float color;
 
 void main() {
     float dist = -(m_mv * vec4(in_position, 1.0)).z;
-    color = 0.8 - dist / 100.0;
+    color = 0.8 - dist / 300.0;
 
     float y_offset = texture(floor_map, in_position.xz / 200.0 - vec2(0.5, 0.5)).b * 20.0;
     y_offset = min(y_offset, 7.0) - 7.0;
