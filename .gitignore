@@ -2,3 +2,7 @@
 __pycache__
 .tox
 /env
+/demosys_py_simlife.egg-info
+/build
+/dist
+/*.png

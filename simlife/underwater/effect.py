@@ -23,6 +23,8 @@ class UnderWaterEffect(effect.Effect):
 
         self.floor = generate_ocean_floor(self.mesh_size)
         self.floor_shader = self.get_shader("underwater/floor.glsl")
+        self.floor_map = self.get_texture("underwater/floor_map.png")
+        self.floor_map.set_interpolation(GL.GL_NEAREST)
 
     @effect.bind_target
     def draw(self, time, target):
@@ -35,7 +37,8 @@ class UnderWaterEffect(effect.Effect):
         self.floor.bind(self.floor_shader)
         self.floor_shader.uniform_mat4("m_proj", m_proj)
         self.floor_shader.uniform_mat4("m_mv", m_mv)
-        self.floor.draw(mode=GL.GL_TRIANGLE_STRIP)
+        self.floor_shader.uniform_sampler_2d(0, "floor_map", self.floor_map)
+        self.floor.draw(mode=GL.GL_TRIANGLES)
 
     def draw_debris(self, m_proj, m_mv):
         GL.glEnable(GL.GL_BLEND)
@@ -51,7 +54,7 @@ class UnderWaterEffect(effect.Effect):
 
 
 def generate_debris():
-    size = 128
+    size = 1280
     colors = [0] * size * 3
     positions = [0] * size * 3
 
@@ -81,44 +84,39 @@ def generate_ocean_surface():
 
 
 def generate_ocean_floor(mesh_size):
-    mesh_res = 32
-    # xpos = -mesh_size / 2.0
+    mesh_res = 128
     zpos = mesh_size / 2.0
     xzstep = mesh_size / mesh_res
 
-    positions = [0] * mesh_res * mesh_res * 3 * 4
+    positions = [0] * mesh_res * mesh_res * 3 * 3
     index = 0
-
-    def noise(x, z):
-        return math.sin(x * 1000.0) * 3.0 + math.cos(z * 1000.0) * 2.0
 
     for y in range(mesh_res):
         xpos = -mesh_size / 2.0
         for x in range(mesh_res):
-            # r =  rnd_in_float(0, 1) * 10.0
             # Lower Left
             positions[index] = xpos
-            positions[index + 1] = noise(xpos, zpos - xzstep)
+            positions[index + 1] = 0
             positions[index + 2] = zpos - xzstep
             index += 3
 
             # Upper Left
             positions[index] = xpos
-            positions[index + 1] = noise(xpos, zpos)
+            positions[index + 1] = 0
             positions[index + 2] = zpos
             index += 3
 
             # Lower Left
             positions[index] = xpos + xzstep
-            positions[index + 1] = noise(xpos + xzstep, zpos - xzstep)
+            positions[index + 1] = 0
             positions[index + 2] = zpos - xzstep
             index += 3
 
             # Upper Right
-            positions[index] = xpos + xzstep
-            positions[index + 1] = noise(xpos + xzstep, zpos)
-            positions[index + 2] = zpos
-            index += 3
+            # positions[index] = xpos + xzstep
+            # positions[index + 1] = 0
+            # positions[index + 2] = zpos
+            # index += 3
 
             xpos += xzstep
         zpos -= xzstep
