@@ -6,13 +6,13 @@ import random
 from PIL import Image, ImageDraw
 
 
-def generate(x , y, points):
-    imgx = x; imgy = y # image size
+def generate(x, y, points):
+    imgx, imgy = x, y  # image size
     image = Image.new("RGB", (imgx, imgy))
-    draw = ImageDraw.Draw(image)
+    ImageDraw.Draw(image)
     pixels = image.load()
-    n = points # of seed points (100)
-    m = 0 # random.randint(0, n - 1) # degree (?)
+    n = points  # of seed points (100)
+    m = 0  # random.randint(0, n - 1) # degree (?)
     seedsX = [random.randint(0, imgx - 1) for i in range(n)]
     seedsY = [random.randint(0, imgy - 1) for i in range(n)]
 
@@ -23,7 +23,8 @@ def generate(x , y, points):
             # create a sorted list of distances to all seed points
             dists = [math.hypot(seedsX[i] - kx, seedsY[i] - ky) for i in range(n)]
             dists.sort()
-            if dists[m] > maxDist: maxDist = dists[m]
+            if dists[m] > maxDist:
+                maxDist = dists[m]
 
     # paint
     for ky in range(imgy):

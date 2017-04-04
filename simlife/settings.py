@@ -38,4 +38,3 @@ TEXTURE_DIRS = (
 TEXTURE_FINDERS = (
     "demosys.core.texturefiles.finders.FileSystemFinder",
     "demosys.core.texturefiles.finders.EffectDirectoriesFinder")
-
