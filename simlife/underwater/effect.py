@@ -6,7 +6,6 @@ from demosys.opengl import VAO
 from demosys.opengl import geometry
 from OpenGL import GL
 from OpenGL.arrays import vbo
-from pyrr import matrix44
 
 
 class UnderWaterEffect(effect.Effect):
@@ -21,10 +20,14 @@ class UnderWaterEffect(effect.Effect):
         self.debris_shader = self.get_shader('underwater/debris.glsl')
         self.debris_texture = self.get_texture('underwater/debris.png')
 
-        self.floor = generate_ocean_floor(self.mesh_size)
+        # self.floor = generate_ocean_floor(self.mesh_size)
+        self.floor = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_shader("underwater/floor.glsl")
         self.floor_map = self.get_texture("underwater/floor_map.png")
         self.floor_map.set_interpolation(GL.GL_NEAREST)
+
+        self.ocean = geometry.plane_xz(size=(10, 10), resolution=(10, 10))
+        self.ocean_shader = self.get_shader('underwater/ocean.glsl')
 
     @effect.bind_target
     def draw(self, time, target):
@@ -32,13 +35,21 @@ class UnderWaterEffect(effect.Effect):
 
         self.draw_floor(self.sys_camera.projection, self.sys_camera.view_matrix)
         self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
+        # self.draw_ocean(self.sys_camera.projection, self.sys_camera.view_matrix)
+
+    def draw_ocean(self, m_proj, m_mv):
+        self.ocean.bind(self.ocean_shader)
+        self.ocean_shader.uniform_mat4("m_proj", m_proj)
+        self.ocean_shader.uniform_mat4("m_mv", m_mv)
+        self.ocean.draw()
 
     def draw_floor(self, m_proj, m_mv):
         self.floor.bind(self.floor_shader)
         self.floor_shader.uniform_mat4("m_proj", m_proj)
         self.floor_shader.uniform_mat4("m_mv", m_mv)
         self.floor_shader.uniform_sampler_2d(0, "floor_map", self.floor_map)
-        self.floor.draw(mode=GL.GL_TRIANGLES)
+        self.floor.draw(mode=GL.GL_TRIANGLE_STRIP)
+        # self.floor.draw()
 
     def draw_debris(self, m_proj, m_mv):
         GL.glEnable(GL.GL_BLEND)
@@ -76,72 +87,6 @@ def generate_debris():
     vao.map_buffer(position_vbo, "in_position", 3)
     vao.map_buffer(color_vbo, "in_color", 3)
     vao.build()
-    return vao
-
-
-def generate_ocean_surface():
-    pass
-
-
-def generate_ocean_floor(mesh_size):
-    mesh_res = 128
-    zpos = mesh_size / 2.0
-    xzstep = mesh_size / mesh_res
-
-    positions = [0] * mesh_res * mesh_res * 3 * 6
-    index = 0
-
-    for y in range(mesh_res):
-        xpos = -mesh_size / 2.0
-        for x in range(mesh_res):
-            # Upper Left
-            positions[index] = xpos
-            positions[index + 1] = 0
-            positions[index + 2] = zpos - xzstep
-            index += 3
-
-            # Lower Left
-            positions[index] = xpos
-            positions[index + 1] = 0
-            positions[index + 2] = zpos
-            index += 3
-
-            # Upper right
-            positions[index] = xpos + xzstep
-            positions[index + 1] = 0
-            positions[index + 2] = zpos - xzstep
-            index += 3
-
-            # Lower Left
-            positions[index] = xpos
-            positions[index + 1] = 0
-            positions[index + 2] = zpos
-            index += 3
-
-            # Lower Right
-            positions[index] = xpos + xzstep
-            positions[index + 1] = 0
-            positions[index + 2] = zpos
-            index += 3
-
-            positions[index] = xpos + xzstep
-            positions[index + 1] = 0
-            positions[index + 2] = zpos - xzstep
-            index += 3
-
-
-
-            xpos += xzstep
-        zpos -= xzstep
-
-    # print(positions)
-    position_vbo = vbo.VBO(numpy.array(positions, dtype=numpy.float32))
-
-    vao = VAO("ocean_floor")
-    vao.add_array_buffer(GL.GL_FLOAT, position_vbo)
-    vao.map_buffer(position_vbo, "in_position", 3)
-    vao.build()
-
     return vao
 
 
