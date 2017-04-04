@@ -17,9 +17,6 @@ class UnderWaterEffect(effect.Effect):
         self.scroll1 = 0.0
         self.scroll2 = 0.0
 
-        self.quad_fs = geometry.quad_fs()
-        self.texture_shader = self.get_shader('texture_fs.glsl')
-
         self.debris = generate_debris()
         self.debris_texture = self.get_texture('underwater/debris.png')
         self.debris_shader = self.get_shader('underwater/debris.glsl')
@@ -37,23 +34,48 @@ class UnderWaterEffect(effect.Effect):
         self.ocean_normals2 = self.get_texture('underwater/Waves2Normals.png')
         self.ocean_normals3 = self.get_texture('underwater/Waves3Normals.png')
 
-        self.offscreen1 = FBO.create(512, 512, depth=True)
+        # postprocess
+        self.quad_fs = geometry.quad_fs()
+        self.texture_shader = self.get_shader('texture_fs.glsl')
+        self.laplacian_shader = self.get_shader('underwater/laplacian.glsl')
+        self.dilate_shader = self.get_shader('underwater/dilate.glsl')
+
+        self.offscreen0 = FBO.create(1024, 1024, depth=True)
+        self.offscreen1 = FBO.create(1024, 1024, depth=True)
 
     @effect.bind_target
     def draw(self, time, target):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
-        with self.offscreen1:
+        with self.offscreen0:
             self.draw_floor(self.sys_camera.projection, self.sys_camera.view_matrix)
             self.draw_ocean(time, self.sys_camera.projection, self.sys_camera.view_matrix)
-            self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
 
         GL.glDisable(GL.GL_DEPTH_TEST)
 
-        with self.quad_fs.bind(self.texture_shader) as shader:
+        # Postprocessing
+        # Laplace
+        with self.offscreen1:
+            with self.quad_fs.bind(self.laplacian_shader) as shader:
+                shader.uniform_sampler_2d(0, "texture0", self.offscreen0.color_buffers[0])
+                shader.uniform_1f("viewportStep", 1.0 / 1024.0)
+                shader.uniform_1f("contrast", 2.0)
+                shader.uniform_3f("color", 1.0, 1.0, 1.0)
+            self.quad_fs.draw()
+
+        # Dilate
+        with self.quad_fs.bind(self.dilate_shader) as shader:
             shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
+            shader.uniform_1f("viewportStep", 1.0 / 1024.0)
         self.quad_fs.draw()
 
+        # with self.quad_fs.bind(self.texture_shader) as shader:
+        #     shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
+        # self.quad_fs.draw()
+
+        self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
+
+        self.offscreen0.clear()
         self.offscreen1.clear()
 
     def draw_ocean(self, time, m_proj, m_mv):
