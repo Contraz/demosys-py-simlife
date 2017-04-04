@@ -18,14 +18,11 @@ uniform float scroll1;
 uniform float scroll2;
 
 out vec2 uv;
-//out vec4 diffuse;
-//out vec4 ambientGlobal;
-//out vec4 ambient;
 out vec3 normal;
+
 out vec3 lightDir;
 out vec3 halfVector;
 out float dist;
-
 
 void main() {
 	vec3 aux;
@@ -34,7 +31,8 @@ void main() {
 	aux = vec3(ecPos);
 	lightDir = normalize(aux);
 	dist = length(aux);
-	halfVector = normalize(vec3(0.5)); // ****
+
+	halfVector = normalize(in_position); // ****
 
     uv = in_uv;
 
@@ -64,9 +62,6 @@ uniform float scroll1;
 uniform float scroll2;
 
 in vec2 uv;
-//in vec4 diffuse;
-//in vec4 ambientGlobal;
-//in vec4 ambient;
 in vec3 normal;
 in vec3 lightDir;
 in vec3 halfVector;

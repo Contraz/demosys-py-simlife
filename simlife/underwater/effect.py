@@ -2,7 +2,7 @@ import random
 import math
 import numpy
 from demosys.effects import effect
-from demosys.opengl import VAO
+from demosys.opengl import VAO, FBO
 from demosys.opengl import geometry
 from OpenGL import GL
 from OpenGL.arrays import vbo
@@ -16,6 +16,9 @@ class UnderWaterEffect(effect.Effect):
         self.scroll0 = 0.0
         self.scroll1 = 0.0
         self.scroll2 = 0.0
+
+        self.quad_fs = geometry.quad_fs()
+        self.texture_shader = self.get_shader('texture_fs.glsl')
 
         self.debris = generate_debris()
         self.debris_texture = self.get_texture('underwater/debris.png')
@@ -34,50 +37,63 @@ class UnderWaterEffect(effect.Effect):
         self.ocean_normals2 = self.get_texture('underwater/Waves2Normals.png')
         self.ocean_normals3 = self.get_texture('underwater/Waves3Normals.png')
 
+        self.offscreen1 = FBO.create(512, 512, depth=True)
+
     @effect.bind_target
     def draw(self, time, target):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
-        self.draw_floor(self.sys_camera.projection, self.sys_camera.view_matrix)
-        self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
-        self.draw_ocean(time, self.sys_camera.projection, self.sys_camera.view_matrix)
+        with self.offscreen1:
+            self.draw_floor(self.sys_camera.projection, self.sys_camera.view_matrix)
+            self.draw_ocean(time, self.sys_camera.projection, self.sys_camera.view_matrix)
+            self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
+
+        GL.glDisable(GL.GL_DEPTH_TEST)
+
+        with self.quad_fs.bind(self.texture_shader) as shader:
+            shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
+        self.quad_fs.draw()
+
+        self.offscreen1.clear()
 
     def draw_ocean(self, time, m_proj, m_mv):
-
+        """Draw the ocean surface"""
         m = self.create_transformation(translation=Vector3([0.0, 12.0, 0.0]))
         m_mv = matrix44.multiply(m, m_mv)
         m_normal = self.create_normal_matrix(m_mv)
 
-        self.ocean.bind(self.ocean_shader)
-        self.ocean_shader.uniform_mat4("m_proj", m_proj)
-        self.ocean_shader.uniform_mat4("m_mv", m_mv)
-        self.ocean_shader.uniform_mat3("m_normal", m_normal)
-        self.ocean_shader.uniform_sampler_2d(0, "tex0", self.ocean_normals1)
-        self.ocean_shader.uniform_sampler_2d(1, "tex1", self.ocean_normals2)
-        self.ocean_shader.uniform_sampler_2d(2, "tex2", self.ocean_normals3)
-        self.ocean_shader.uniform_sampler_2d(3, "tex3", self.ocean_surface)
-        self.ocean_shader.uniform_1f("scroll0", time / 10.0)
-        self.ocean_shader.uniform_1f("scroll1", time / 10.0)
-        self.ocean_shader.uniform_1f("scroll2", time / 10.0)
+        with self.ocean.bind(self.ocean_shader) as shader:
+            shader.uniform_mat4("m_proj", m_proj)
+            shader.uniform_mat4("m_mv", m_mv)
+            shader.uniform_mat3("m_normal", m_normal)
+            shader.uniform_sampler_2d(0, "tex0", self.ocean_normals1)
+            shader.uniform_sampler_2d(1, "tex1", self.ocean_normals2)
+            shader.uniform_sampler_2d(2, "tex2", self.ocean_normals3)
+            shader.uniform_sampler_2d(3, "tex3", self.ocean_surface)
+            shader.uniform_1f("scroll0", 0.02 * time)
+            shader.uniform_1f("scroll1", 0.10 * time)
+            shader.uniform_1f("scroll2", 0.04 * time)
         self.ocean.draw()
 
     def draw_floor(self, m_proj, m_mv):
-        self.floor.bind(self.floor_shader)
-        self.floor_shader.uniform_mat4("m_proj", m_proj)
-        self.floor_shader.uniform_mat4("m_mv", m_mv)
-        self.floor_shader.uniform_sampler_2d(0, "floor_map", self.floor_map)
+        """Draw the ocean floor terrain"""
+        with self.floor.bind(self.floor_shader) as shader:
+            shader.uniform_mat4("m_proj", m_proj)
+            shader.uniform_mat4("m_mv", m_mv)
+            shader.uniform_sampler_2d(0, "floor_map", self.floor_map)
         self.floor.draw()
 
     def draw_debris(self, m_proj, m_mv):
+        """Draw debris particles"""
         GL.glEnable(GL.GL_BLEND)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE)
 
-        self.debris.bind(self.debris_shader)
-        self.debris_shader.uniform_mat4("m_proj", m_proj)
-        self.debris_shader.uniform_mat4("m_mv", m_mv)
-        self.debris_shader.uniform_sampler_2d(0, "texture0", self.debris_texture)
-        self.debris_shader.uniform_1f("size", 0.25)
+        with self.debris.bind(self.debris_shader) as shader:
+            shader.uniform_mat4("m_proj", m_proj)
+            shader.uniform_mat4("m_mv", m_mv)
+            shader.uniform_sampler_2d(0, "texture0", self.debris_texture)
+            shader.uniform_1f("size", 0.25)
         self.debris.draw(mode=GL.GL_POINTS)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_BLEND)
