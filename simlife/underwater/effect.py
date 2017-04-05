@@ -40,16 +40,26 @@ class UnderWaterEffect(effect.Effect):
         self.laplacian_shader = self.get_shader('underwater/laplacian.glsl')
         self.dilate_shader = self.get_shader('underwater/dilate.glsl')
 
-        self.offscreen0 = FBO.create(1024, 1024, depth=True)
-        self.offscreen1 = FBO.create(1024, 1024, depth=True)
+        s = 2048
+        self.offscreen0 = FBO.create(s, s, depth=True)
+        self.offscreen1 = FBO.create(s, s, depth=True)
 
     @effect.bind_target
     def draw(self, time, target):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
+        self.sys_camera.position = Vector3([
+            math.sin(time / 10) * 100,
+            4.0,
+            math.cos(time / 10) * 100,
+        ])
+        m_mv = self.sys_camera.look_at(vec=Vector3([2.0, 7.0, 3.0]))
+        # print(m_mv)
+        # m_mv = self.sys_camera.view_matrix
+
         with self.offscreen0:
-            self.draw_floor(self.sys_camera.projection, self.sys_camera.view_matrix)
-            self.draw_ocean(time, self.sys_camera.projection, self.sys_camera.view_matrix)
+            self.draw_floor(self.sys_camera.projection, m_mv)
+            self.draw_ocean(time, self.sys_camera.projection, m_mv)
 
         GL.glDisable(GL.GL_DEPTH_TEST)
 
@@ -73,7 +83,7 @@ class UnderWaterEffect(effect.Effect):
         #     shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
         # self.quad_fs.draw()
 
-        self.draw_debris(self.sys_camera.projection, self.sys_camera.view_matrix)
+        self.draw_debris(self.sys_camera.projection, m_mv)
 
         self.offscreen0.clear()
         self.offscreen1.clear()

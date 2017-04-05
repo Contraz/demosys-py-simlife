@@ -9,19 +9,21 @@ OPENGL = {
 }
 
 WINDOW = {
-    "size": (1280, 720),
+    "size": (1920, 1080),
     "fullscreen": False,
-    "resizable": False,
+    "resizable": True,
     "title": "demosys-py",
     "vsync": True,
-    "cursor": False
+    "cursor": True,
 }
 
 EFFECTS = (
     'simlife.underwater',
 )
 
-MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
+EFFECT_MANAGER = 'demosys.effects.managers.single.SingleEffectManager'
+
+# MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
 SHADER_DIRS = (
     os.path.join(PROJECT_DIR, 'resources/shaders'),
