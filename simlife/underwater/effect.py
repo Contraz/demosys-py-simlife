@@ -45,7 +45,7 @@ class UnderWaterEffect(effect.Effect):
         self.offscreen1 = FBO.create(s, s, depth=True)
 
     @effect.bind_target
-    def draw(self, time, target):
+    def draw(self, time, frametime, target):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
         self.sys_camera.position = Vector3([
