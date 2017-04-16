@@ -11,7 +11,7 @@ from pyrr import Vector3, matrix44
 
 class UnderWaterEffect(effect.Effect):
     """Generated default efffect"""
-    def init(self):
+    def __init__(self):
         self.mesh_size = 200
         self.scroll0 = 0.0
         self.scroll1 = 0.0

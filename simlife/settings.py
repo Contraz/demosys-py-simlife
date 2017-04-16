@@ -13,17 +13,19 @@ WINDOW = {
     "fullscreen": False,
     "resizable": True,
     "title": "demosys-py",
-    "vsync": True,
+    "vsync": False,
     "cursor": True,
 }
+
+MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
+
+TIMER = 'demosys.timers.MusicTimer'
 
 EFFECTS = (
     'simlife.underwater',
 )
 
 EFFECT_MANAGER = 'demosys.effects.managers.single.SingleEffectManager'
-
-# MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
 SHADER_DIRS = (
     os.path.join(PROJECT_DIR, 'resources/shaders'),
