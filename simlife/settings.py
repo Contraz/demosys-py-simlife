@@ -9,11 +9,12 @@ OPENGL = {
 }
 
 WINDOW = {
-    "size": (1920, 1080),
+    # "size": (1920, 1080),
+    "size": (800, 420),
     "fullscreen": False,
     "resizable": True,
     "title": "demosys-py",
-    "vsync": False,
+    "vsync": True,
     "cursor": True,
 }
 
