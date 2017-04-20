@@ -6,7 +6,6 @@ from demosys.opengl import VAO, FBO
 from demosys.opengl import geometry
 from OpenGL import GL
 from OpenGL.arrays import vbo
-from OpenGL.arrays.vbo import VBO
 from pyrr import Vector3, matrix44
 
 
