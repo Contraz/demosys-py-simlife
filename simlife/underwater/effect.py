@@ -22,13 +22,12 @@ class UnderWaterEffect(effect.Effect):
         self.debris_texture = self.get_texture('underwater/debris.png')
         self.debris_shader = self.get_shader('underwater/debris.glsl')
 
-        # self.floor = generate_ocean_floor(self.mesh_size)
-        self.floor = plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
+        self.floor = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_shader("underwater/floor.glsl")
         self.floor_map = self.get_texture("underwater/floor_map.png")
         self.floor_map.set_interpolation(GL.GL_NEAREST)
 
-        self.ocean = plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(64, 64))
+        self.ocean = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(64, 64))
         self.ocean_shader = self.get_shader('underwater/ocean.glsl')
         self.ocean_surface = self.get_texture('underwater/OceanSurface.png')
         self.ocean_normals1 = self.get_texture('underwater/Waves1Normals.png')
@@ -163,69 +162,3 @@ def rnd_in_float(range_start, range_end):
     rng = range_end - range_start
     rnd = 0.0001 * (random.randint(0, 4294967296) % 10000)
     return range_start + math.fmod(rnd, rng)
-
-
-def plane_xz(size=(10, 10), resolution=(10, 10)):
-    """
-    Generates a plane on the xz axis of a specific size and resolution
-    :param size: (x, y) tuple
-    :param resolution: (x, y) tuple
-    :return: VAO
-    """
-    sx, sz = size
-    rx, rz = resolution
-    dx, dz = sx / rx, sz / rz  # step
-    ox, oz = -sx / 2, -sz / 2  # start offset
-
-    def gen_pos():
-        for z in range(rz):
-            for x in range(rx):
-                yield ox + x * dx
-                yield 0
-                yield oz + z * dz
-
-    def gen_uv():
-        for z in range(rz):
-            for x in range(rx):
-                yield x / (rx - 1)
-                yield 1 - z / (rz - 1)
-
-    def gen_index():
-        for z in range(rz - 1):
-            for x in range(rx - 1):
-                # quad poly left
-                yield z * rz + x
-                yield z * rz + x + 1
-                yield z * rz + x + rx
-                # quad poly right
-                yield z * rz + x + rx
-                yield z * rz + x + 1
-                yield z * rz + x + rx + 1
-
-    # pos = list(gen_pos())
-    # uv = list(gen_uv())
-    # index = list(gen_index())
-    # print("******", len(pos), len(uv), len(index))
-    # for i in index:
-    #     if i >= rx * rz:
-    #         raise ValueError("FUUUUCK")
-    #     if i < 0:
-    #         raise ValueError("FUUUUCK")
-
-    pos_data = numpy.fromiter(gen_pos(), dtype=numpy.float32)
-    position_vbo = VBO(pos_data)
-
-    uv_data = numpy.fromiter(gen_uv(), dtype=numpy.float32)
-    uv_vbo = VBO(uv_data)
-
-    index_data = numpy.fromiter(gen_index(), dtype=numpy.uint32)
-    index_vbo = VBO(index_data, target=GL.GL_ELEMENT_ARRAY_BUFFER)
-
-    vao = VAO("plane_xz", mode=GL.GL_TRIANGLES)
-    vao.add_array_buffer(GL.GL_FLOAT, position_vbo)
-    vao.add_array_buffer(GL.GL_FLOAT, uv_vbo)
-    vao.map_buffer(position_vbo, "in_position", 3)
-    vao.map_buffer(uv_vbo, "in_uv", 2)
-    vao.set_element_buffer(GL.GL_UNSIGNED_INT, index_vbo)
-    vao.build()
-    return vao
