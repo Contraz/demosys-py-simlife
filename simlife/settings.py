@@ -21,7 +21,8 @@ WINDOW = {
 
 MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
-TIMER = 'demosys.timers.MusicTimer'
+# TIMER = 'demosys.timers.MusicTimer'
+TIMER = 'demosys.timers.RocketTimer'
 
 EFFECTS = (
     'simlife.underwater',

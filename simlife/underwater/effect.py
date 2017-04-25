@@ -43,18 +43,31 @@ class UnderWaterEffect(effect.Effect):
         self.offscreen0 = FBO.create(s, s, depth=True)
         self.offscreen1 = FBO.create(s, s, depth=True)
 
+        # Tracks
+        self.cam_pitch = self.get_track("camera:pitch")
+        self.cam_yaw = self.get_track("camera:head")
+        self.cam_x = self.get_track("camera:x")
+        self.cam_y = self.get_track("camera:y")
+        self.cam_z = self.get_track("camera:z")
+
     @effect.bind_target
     def draw(self, time, frametime, target):
         GL.glEnable(GL.GL_DEPTH_TEST)
 
-        self.sys_camera.position = Vector3([
-            math.sin(time / 10) * 100,
-            4.0,
-            math.cos(time / 10) * 100,
-        ])
-        m_mv = self.sys_camera.look_at(vec=Vector3([2.0, 7.0, 3.0]))
-        # print(m_mv)
+        # self.sys_camera.position = Vector3([
+        #     math.sin(time / 10) * 100,
+        #     4.0,
+        #     math.cos(time / 10) * 100,
+        # ])
+        # m_mv = self.sys_camera.look_at(vec=Vector3([2.0, 7.0, 3.0]))
         # m_mv = self.sys_camera.view_matrix
+
+        self.sys_camera.position = Vector3([self.cam_x.time_value(time),
+                                            self.cam_y.time_value(time),
+                                            self.cam_z.time_value(time)])
+        self.sys_camera.yaw = self.cam_yaw.time_value(time)
+        self.sys_camera.pitch = self.cam_yaw.time_value(time)
+        m_mv = self.sys_camera.view_matrix
 
         with self.offscreen0:
             self.draw_floor(self.sys_camera.projection, m_mv)
