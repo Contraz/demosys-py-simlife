@@ -10,7 +10,8 @@ OPENGL = {
 
 WINDOW = {
     # "size": (1920, 1080),
-    "size": (800, 420),
+    # "size": (800, 420),
+    "size": (1280, 720),
     "fullscreen": False,
     "resizable": True,
     "title": "demosys-py",
@@ -26,7 +27,7 @@ EFFECTS = (
     'simlife.underwater',
 )
 
-EFFECT_MANAGER = 'demosys.effects.managers.single.SingleEffectManager'
+EFFECT_MANAGER = 'demosys.effects.managers.SingleEffectManager'
 
 SHADER_DIRS = (
     os.path.join(PROJECT_DIR, 'resources/shaders'),
