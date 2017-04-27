@@ -11,7 +11,8 @@ OPENGL = {
 WINDOW = {
     # "size": (1920, 1080),
     # "size": (800, 420),
-    "size": (1280, 720),
+    "size": (1024, 576),
+    # "size": (1280, 720),
     "fullscreen": False,
     "resizable": True,
     "title": "demosys-py",

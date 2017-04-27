@@ -1,12 +1,15 @@
 import random
 import math
 import numpy
-from demosys.effects import effect
-from demosys.opengl import VAO, FBO
-from demosys.opengl import geometry
+
 from OpenGL import GL
 from OpenGL.arrays import vbo
 from pyrr import Vector3, matrix44
+
+from demosys.effects import effect
+from demosys.opengl import VAO, FBO
+from demosys.opengl import geometry
+from demosys.scene.camera import Camera
 
 
 class UnderWaterEffect(effect.Effect):
@@ -43,12 +46,24 @@ class UnderWaterEffect(effect.Effect):
         self.offscreen0 = FBO.create(s, s, depth=True)
         self.offscreen1 = FBO.create(s, s, depth=True)
 
-        # Tracks
+        self.cam = Camera(fov=75, near=1, far=500, aspect=self.window_aspect)
+
+        # Tracks: Camera
         self.cam_pitch = self.get_track("camera:pitch")
         self.cam_yaw = self.get_track("camera:head")
         self.cam_x = self.get_track("camera:x")
         self.cam_y = self.get_track("camera:y")
         self.cam_z = self.get_track("camera:z")
+
+        self.creature = geometry.cube(2.0, 2.0, 2.0)
+        self.creature_shader = self.get_shader("underwater/creature.glsl")
+        # Tracks: Creatures
+        self.creature1_pos_x = self.get_track("creatures2:pos_x")
+        self.creature1_pos_y = self.get_track("creatures2:pos_y")
+        self.creature1_pos_z = self.get_track("creatures2:pos_z")
+        self.creature2_pos_x = self.get_track("creatures2:pos_x2")
+        self.creature2_pos_y = self.get_track("creatures2:pos_y2")
+        self.creature2_pos_z = self.get_track("creatures2:pos_z2")
 
     @effect.bind_target
     def draw(self, time, frametime, target):
@@ -62,16 +77,17 @@ class UnderWaterEffect(effect.Effect):
         # m_mv = self.sys_camera.look_at(vec=Vector3([2.0, 7.0, 3.0]))
         # m_mv = self.sys_camera.view_matrix
 
-        self.sys_camera.position = Vector3([self.cam_x.time_value(time),
-                                            self.cam_y.time_value(time),
-                                            self.cam_z.time_value(time)])
-        self.sys_camera.yaw = self.cam_yaw.time_value(time)
-        self.sys_camera.pitch = self.cam_yaw.time_value(time)
-        m_mv = self.sys_camera.view_matrix
+        self.cam.position = Vector3([self.cam_x.time_value(time),
+                                     self.cam_y.time_value(time),
+                                     self.cam_z.time_value(time)])
+        self.cam.yaw = self.cam_yaw.time_value(time) - 90
+        self.cam.pitch = self.cam_pitch.time_value(time)
+
+        m_mv = self.cam.view_matrix
 
         with self.offscreen0:
-            self.draw_floor(self.sys_camera.projection, m_mv)
-            self.draw_ocean(time, self.sys_camera.projection, m_mv)
+            self.draw_floor(self.cam.projection, m_mv)
+            self.draw_ocean(time, self.cam.projection, m_mv)
 
         GL.glDisable(GL.GL_DEPTH_TEST)
 
@@ -95,7 +111,8 @@ class UnderWaterEffect(effect.Effect):
         #     shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
         # self.quad_fs.draw()
 
-        self.draw_debris(self.sys_camera.projection, m_mv)
+        self.draw_debris(self.cam.projection, m_mv)
+        self.draw_creatures(time, self.cam.projection, m_mv)
 
         self.offscreen0.clear()
         self.offscreen1.clear()
@@ -126,6 +143,37 @@ class UnderWaterEffect(effect.Effect):
             shader.uniform_mat4("m_mv", m_mv)
             shader.uniform_sampler_2d(0, "floor_map", self.floor_map)
         self.floor.draw()
+
+    def draw_creatures(self, time, m_proj, m_mv):
+        trans = matrix44.create_from_translation(
+            Vector3([
+                self.creature1_pos_x.time_value(time),
+                self.creature1_pos_y.time_value(time),
+                self.creature1_pos_z.time_value(time)
+            ])
+        )
+        m_mv = matrix44.multiply(trans, m_mv)
+        m_normal = self.create_normal_matrix(m_mv)
+        with self.creature.bind(self.creature_shader) as s:
+            s.uniform_mat4("m_proj", m_proj)
+            s.uniform_mat4("m_mv", m_mv)
+            s.uniform_mat3("m_normal", m_normal)
+        self.creature.draw()
+
+        trans = matrix44.create_from_translation(
+            Vector3([
+                self.creature2_pos_x.time_value(time),
+                self.creature2_pos_y.time_value(time),
+                self.creature2_pos_z.time_value(time)
+            ])
+        )
+        m_mv = matrix44.multiply(trans, m_mv)
+        m_normal = self.create_normal_matrix(m_mv)
+        with self.creature.bind(self.creature_shader) as s:
+            s.uniform_mat4("m_proj", m_proj)
+            s.uniform_mat4("m_mv", m_mv)
+            s.uniform_mat3("m_normal", m_normal)
+        self.creature.draw()
 
     def draw_debris(self, m_proj, m_mv):
         """Draw debris particles"""
