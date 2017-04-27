@@ -81,7 +81,7 @@ class UnderWaterEffect(effect.Effect):
                                      self.cam_y.time_value(time),
                                      self.cam_z.time_value(time)])
         self.cam.yaw = self.cam_yaw.time_value(time) - 90
-        self.cam.pitch = self.cam_pitch.time_value(time)
+        self.cam.pitch = -self.cam_pitch.time_value(time)
 
         m_mv = self.cam.view_matrix
 
