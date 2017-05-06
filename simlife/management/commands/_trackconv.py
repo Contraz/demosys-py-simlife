@@ -66,8 +66,7 @@ def process_files():
 def crate_start_stop_track(path, effect):
     """Convert StartStop track to rocket"""
     with open(path, 'rb') as fd:
-        priority = struct.unpack('<i', fd.read(4))[0]
-        # print("priority:", priority)
+        struct.unpack('<i', fd.read(4))[0]  # priority
 
         count = struct.unpack('<i', fd.read(4))[0]
         # print("count:", count)
@@ -80,8 +79,7 @@ def crate_start_stop_track(path, effect):
             row = struct.unpack('i', fd.read(4))[0]
             action = struct.unpack('i', fd.read(4))[0]
             if action == 1:
-                name = read_string(fd)
-                # print("name", name)
+                read_string(fd)  # name
 
             # print("row={}, action={}".format(row, action))
             # Add a step keyframe

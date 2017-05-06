@@ -22,12 +22,14 @@ WINDOW = {
 
 MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
+# TIMER = 'demosys.timers.Timer'
 # TIMER = 'demosys.timers.MusicTimer'
 TIMER = 'demosys.timers.RocketTimer'
 
 ROCKET = {
-    'mode': 'editor',
-    # 'mode': 'project',
+    # 'mode': 'editor',
+    'mode': 'project',
+    # 'mode': 'files',
     'rps': 24,
     'project': os.path.join(PROJECT_DIR, 'resources/tracks.xml'),
     'files': os.path.join(PROJECT_DIR, 'resources/tracks'),

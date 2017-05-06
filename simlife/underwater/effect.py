@@ -15,7 +15,7 @@ from demosys.scene.camera import Camera
 class UnderWaterEffect(effect.Effect):
     """Generated default efffect"""
     def __init__(self):
-        self.mesh_size = 200
+        self.mesh_size = 400
         self.scroll0 = 0.0
         self.scroll1 = 0.0
         self.scroll2 = 0.0
@@ -26,15 +26,15 @@ class UnderWaterEffect(effect.Effect):
 
         self.floor = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_shader("underwater/floor.glsl")
-        self.floor_map = self.get_texture("underwater/floor_map.png")
-        self.floor_map.set_interpolation(GL.GL_NEAREST)
+        self.floor_map = self.get_texture("underwater/floor_map.png", wrap_s=GL.GL_REPEAT, wrap_t=GL.GL_REPEAT,
+                                          min_filter=GL.GL_NEAREST, mag_filter=GL.GL_NEAREST)
 
         self.ocean = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(64, 64))
         self.ocean_shader = self.get_shader('underwater/ocean.glsl')
-        self.ocean_surface = self.get_texture('underwater/OceanSurface.png')
-        self.ocean_normals1 = self.get_texture('underwater/Waves1Normals.png')
-        self.ocean_normals2 = self.get_texture('underwater/Waves2Normals.png')
-        self.ocean_normals3 = self.get_texture('underwater/Waves3Normals.png')
+        self.ocean_surface = self.get_texture('underwater/OceanSurface.png', wrap_s=GL.GL_REPEAT, wrap_t=GL.GL_REPEAT)
+        self.ocean_normals1 = self.get_texture('underwater/Waves1Normals.png', wrap_s=GL.GL_REPEAT, wrap_t=GL.GL_REPEAT)
+        self.ocean_normals2 = self.get_texture('underwater/Waves2Normals.png', wrap_s=GL.GL_REPEAT, wrap_t=GL.GL_REPEAT)
+        self.ocean_normals3 = self.get_texture('underwater/Waves3Normals.png', wrap_s=GL.GL_REPEAT, wrap_t=GL.GL_REPEAT)
 
         # postprocess
         self.quad_fs = geometry.quad_fs()
