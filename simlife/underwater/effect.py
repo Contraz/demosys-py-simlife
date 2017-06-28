@@ -86,8 +86,8 @@ class UnderWaterEffect(effect.Effect):
         m_mv = self.cam.view_matrix
 
         with self.offscreen0:
-            self.draw_floor(self.cam.projection, m_mv)
-            self.draw_ocean(time, self.cam.projection, m_mv)
+            self.draw_floor(self.cam.projection.matrix, m_mv)
+            self.draw_ocean(time, self.cam.projection.matrix, m_mv)
 
         GL.glDisable(GL.GL_DEPTH_TEST)
 
@@ -111,8 +111,8 @@ class UnderWaterEffect(effect.Effect):
         #     shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
         # self.quad_fs.draw()
 
-        self.draw_debris(self.cam.projection, m_mv)
-        self.draw_creatures(time, self.cam.projection, m_mv)
+        self.draw_debris(self.cam.projection.matrix, m_mv)
+        self.draw_creatures(time, self.cam.projection.matrix, m_mv)
 
         self.offscreen0.clear()
         self.offscreen1.clear()
