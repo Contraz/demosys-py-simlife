@@ -17,7 +17,7 @@ WINDOW = {
     "cursor": False,
 }
 
-MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
+MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.ogg')
 
 # TIMER = 'demosys.timers.Timer'
 # TIMER = 'demosys.timers.MusicTimer'
@@ -29,7 +29,7 @@ ROCKET = {
     # 'mode': 'editor',
     'mode': 'project',
     # 'mode': 'files',
-    'rps': 24,
+    'rps': 20,  # row_rate from the old demo
     'project': os.path.join(PROJECT_DIR, 'resources/tracks.xml'),
     'files': os.path.join(PROJECT_DIR, 'resources/tracks'),
 }
