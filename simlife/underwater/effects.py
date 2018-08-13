@@ -44,13 +44,19 @@ class UnderWaterEffect(effect.Effect):
         self.creature = geometry.cube(2.0, 2.0, 2.0)
         self.creature_shader = self.get_program("creature")
 
+        color_layer = self.ctx.texture(self.window.buffer_size, 4)
+        color_layer.repeat_x = False
+        color_layer.repeat_y = False
         self.offscreen0 = self.ctx.framebuffer(
-            self.ctx.texture(self.window.buffer_size, 4),
+            color_layer,
             depth_attachment=self.ctx.depth_texture(self.window.buffer_size),
         )
 
+        color_layer = self.ctx.texture(self.window.buffer_size, 4)
+        color_layer.repeat_x = False
+        color_layer.repeat_y = False
         self.offscreen1 = self.ctx.framebuffer(
-            self.ctx.texture(self.window.buffer_size, 4),
+            color_layer,
             depth_attachment=self.ctx.depth_texture(self.window.buffer_size),
         )
 
