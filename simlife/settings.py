@@ -9,12 +9,13 @@ OPENGL = {
 }
 
 WINDOW = {
+    "class": "demosys.context.pyqt.Window",
     "size": (1280, 720),
-    "fullscreen": True,
+    "fullscreen": False,
     "resizable": True,
     "title": "demosys-py",
     "vsync": True,
-    "cursor": False,
+    "cursor": True,
 }
 
 MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.ogg')
