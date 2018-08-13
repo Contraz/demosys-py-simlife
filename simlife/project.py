@@ -6,8 +6,11 @@ class Project(BaseProject):
         'simlife.underwater',
     ]
 
+    def get_default_effect(self):
+        return self.get_effect('underwater')
+
     def create_resources(self):
         pass
 
     def create_effect_instances(self):
-        pass
+        self.create_effect('underwater', 'UnderWaterEffect')

@@ -9,22 +9,19 @@ OPENGL = {
 }
 
 WINDOW = {
-    # "size": (1920, 1080),
-    # "size": (800, 420),
-    "size": (1024, 576),
-    # "size": (1280, 720),
-    "fullscreen": False,
+    "size": (1280, 720),
+    "fullscreen": True,
     "resizable": True,
     "title": "demosys-py",
     "vsync": True,
-    "cursor": True,
+    "cursor": False,
 }
 
 MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
 # TIMER = 'demosys.timers.Timer'
 # TIMER = 'demosys.timers.MusicTimer'
-TIMER = 'demosys.timers.rocket.Timer'
+TIMER = 'demosys.timers.rocketmusic.Timer'
 
 PROJECT = 'simlife.project.Project'
 

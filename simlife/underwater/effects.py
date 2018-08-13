@@ -21,7 +21,7 @@ class UnderWaterEffect(effect.Effect):
 
         self.debris = generate_debris()
         self.debris_texture = self.get_texture('debris')
-        self.debris_shader = self.get_program('underwater/debris.glsl')
+        self.debris_shader = self.get_program('debris')
 
         self.floor = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_program("floor")
@@ -101,7 +101,7 @@ class UnderWaterEffect(effect.Effect):
         # Postprocessing
         # Laplace
         self.offscreen1.use()
-        self.offscreen0.color_buffers[0].use(location=0)
+        self.offscreen0.color_attachments[0].use(location=0)
         self.laplacian_shader["texture0"].value = 0
         self.laplacian_shader["viewportStep"].value = 1.0 / 1024.0
         self.laplacian_shader["contrast"].value = 2.0
@@ -110,9 +110,9 @@ class UnderWaterEffect(effect.Effect):
         target.use()
 
         # Dilate
-        self.offscreen1.color_buffers[0].use(location=0)
+        self.offscreen1.color_attachments[0].use(location=0)
         self.dilate_shader["texture0"].value == 0
-        self.dilate_shader.uniform_1f("viewportStep", 1.0 / 1024.0)
+        self.dilate_shader["viewportStep"].value = 1.0 / 1024.0
         self.quad_fs.render(self.dilate_shader)
 
         # with self.quad_fs.bind(self.texture_shader) as shader:
