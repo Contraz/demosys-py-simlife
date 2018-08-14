@@ -5,30 +5,23 @@ import numpy
 
 from pyrr import Vector3, matrix44
 
-from demosys.effects import effect
+from demosys.effects import Effect
 from demosys.opengl.vao import VAO
 from demosys import geometry
 from demosys.scene.camera import Camera
 
 
-class UnderWaterEffect(effect.Effect):
-    """Generated default efffect"""
+class UnderWaterEffect(Effect):
+    runnable = True
+
     def __init__(self):
-        self.mesh_size = 400
-        self.scroll0 = 0.0
-        self.scroll1 = 0.0
-        self.scroll2 = 0.0
-
-        self.debris = generate_debris()
-        self.debris_texture = self.get_texture('debris')
-        self.debris_shader = self.get_program('debris')
-
-        self.floor = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(128, 128))
+        mesh_size = 400
+        self.floor = geometry.plane_xz(size=(mesh_size, mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_program("floor")
         self.floor_map = self.get_texture("floor")
         self.floor.filter = (moderngl.NEAREST, moderngl.NEAREST)
 
-        self.ocean = geometry.plane_xz(size=(self.mesh_size, self.mesh_size), resolution=(64, 64))
+        self.ocean = geometry.plane_xz(size=(mesh_size, mesh_size), resolution=(64, 64))
         self.ocean_shader = self.get_program('ocean')
         self.ocean_surface = self.get_texture('OceanSurface')
         self.ocean_normals1 = self.get_texture('Waves1Normals')
@@ -41,9 +34,15 @@ class UnderWaterEffect(effect.Effect):
         self.laplacian_shader = self.get_program('laplacian')
         self.dilate_shader = self.get_program('dilate')
 
-        self.creature = geometry.cube(2.0, 2.0, 2.0)
-        self.creature_shader = self.get_program("creature")
+        self.cam = Camera(fov=75, near=1, far=500, aspect=self.window.aspect_ratio)
 
+        self.init_fbos()
+        self.init_tracks()
+
+        self.debris = DebrisEffect()
+        self.creatures = CreaturesEffect()
+
+    def init_fbos(self):
         color_layer = self.ctx.texture(self.window.buffer_size, 4)
         color_layer.repeat_x = False
         color_layer.repeat_y = False
@@ -60,8 +59,7 @@ class UnderWaterEffect(effect.Effect):
             depth_attachment=self.ctx.depth_texture(self.window.buffer_size),
         )
 
-        self.cam = Camera(fov=75, near=1, far=500, aspect=self.window.aspect_ratio)
-
+    def init_tracks(self):
         # Tracks: Camera
         self.cam_pitch = self.get_track("camera:pitch")
         self.cam_yaw = self.get_track("camera:head")
@@ -69,34 +67,20 @@ class UnderWaterEffect(effect.Effect):
         self.cam_y = self.get_track("camera:y")
         self.cam_z = self.get_track("camera:z")
 
-        # Tracks: Creatures
-        self.creature1_pos_x = self.get_track("creatures1:pos_x")
-        self.creature1_pos_y = self.get_track("creatures1:pos_y")
-        self.creature1_pos_z = self.get_track("creatures1:pos_z")
-
-        self.creature2_pos_x = self.get_track("creatures2:pos_x2")
-        self.creature2_pos_y = self.get_track("creatures2:pos_y2")
-        self.creature2_pos_z = self.get_track("creatures2:pos_z2")
-
     def draw(self, time, frametime, target):
-        self.ctx.enable(moderngl.DEPTH_TEST)
+        self.ctx.enable_only(moderngl.DEPTH_TEST)
+        self.offscreen0.clear()
+        self.offscreen1.clear()
 
-        # self.sys_camera.position = Vector3([
-        #     math.sin(time / 10) * 100,
-        #     4.0,
-        #     math.cos(time / 10) * 100,
-        # ])
-        # m_mv = self.sys_camera.look_at(vec=Vector3([2.0, 7.0, 3.0]))
-        # m_mv = self.sys_camera.view_matrix
-
+        # Get camera position from tracks
         self.cam.position = Vector3([self.cam_x.time_value(time),
                                      self.cam_y.time_value(time),
                                      self.cam_z.time_value(time)])
         self.cam.yaw = self.cam_yaw.time_value(time) - 90
         self.cam.pitch = -self.cam_pitch.time_value(time)
-
         m_mv = self.cam.view_matrix
 
+        # Draw the floor and ocean
         self.offscreen0.use()
         self.draw_floor(self.cam.projection.matrix, m_mv)
         self.draw_ocean(time, self.cam.projection.matrix, m_mv)
@@ -104,8 +88,7 @@ class UnderWaterEffect(effect.Effect):
 
         self.ctx.disable(moderngl.DEPTH_TEST)
 
-        # Postprocessing
-        # Laplace
+        # Postprocessing - Laplace
         self.offscreen1.use()
         self.offscreen0.color_attachments[0].use(location=0)
         self.laplacian_shader["texture0"].value = 0
@@ -115,21 +98,15 @@ class UnderWaterEffect(effect.Effect):
         self.quad_fs.render(self.laplacian_shader)
         target.use()
 
-        # Dilate
+        # Postprocessing - Dilate
         self.offscreen1.color_attachments[0].use(location=0)
         self.dilate_shader["texture0"].value == 0
         self.dilate_shader["viewportStep"].value = 1.0 / 1024.0
         self.quad_fs.render(self.dilate_shader)
 
-        # with self.quad_fs.bind(self.texture_shader) as shader:
-        #     shader.uniform_sampler_2d(0, "texture0", self.offscreen1.color_buffers[0])
-        # self.quad_fs.draw()
-
-        self.draw_debris(self.cam.projection.matrix, m_mv)
-        self.draw_creatures(time, self.cam.projection.matrix, m_mv)
-
-        self.offscreen0.clear()
-        self.offscreen1.clear()
+        # Draw debris and creatures
+        self.debris.draw(self.cam.projection.matrix, m_mv)
+        self.creatures.draw(time, self.cam.projection.matrix, m_mv)
 
     def draw_ocean(self, time, m_proj, m_mv):
         """Draw the ocean surface"""
@@ -164,7 +141,24 @@ class UnderWaterEffect(effect.Effect):
         self.floor_shader["floor_map"].value = 0
         self.floor.render(self.floor_shader)
 
-    def draw_creatures(self, time, m_proj, m_mv):
+
+class CreaturesEffect(Effect):
+    runnable = False
+
+    def __init__(self):
+        self.creature = geometry.cube(2.0, 2.0, 2.0)
+        self.creature_shader = self.get_program("creature")
+
+        # Tracks: Creatures
+        self.creature1_pos_x = self.get_track("creatures1:pos_x")
+        self.creature1_pos_y = self.get_track("creatures1:pos_y")
+        self.creature1_pos_z = self.get_track("creatures1:pos_z")
+
+        self.creature2_pos_x = self.get_track("creatures2:pos_x2")
+        self.creature2_pos_y = self.get_track("creatures2:pos_y2")
+        self.creature2_pos_z = self.get_track("creatures2:pos_z2")
+
+    def draw(self, time, m_proj, m_mv):
         trans = matrix44.create_from_translation(
             Vector3([
                 self.creature1_pos_x.time_value(time),
@@ -195,7 +189,17 @@ class UnderWaterEffect(effect.Effect):
         self.creature_shader["m_normal"].write(m_normal.astype('f4').tobytes())
         self.creature.render(self.creature_shader)
 
-    def draw_debris(self, m_proj, m_mv):
+
+class DebrisEffect(Effect):
+    """Draws debris particles"""
+    runnable = False
+
+    def __init__(self):
+        self.debris = self.generate_debris()
+        self.debris_texture = self.get_texture('debris')
+        self.debris_shader = self.get_program('debris')
+
+    def draw(self, m_proj, m_mv):
         """Draw debris particles"""
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.BLEND)
@@ -211,30 +215,29 @@ class UnderWaterEffect(effect.Effect):
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.BLEND)
 
+    def generate_debris(self):
+        # FIXME: Just geometry?
+        size = 1280
+        colors = [0] * size * 3
+        positions = [0] * size * 3
 
-def generate_debris():
-    # FIXME: Just geometry?
-    size = 1280
-    colors = [0] * size * 3
-    positions = [0] * size * 3
+        for i in range(0, size * 3, 3):
+            positions[i] = rnd_in_float(-0.5, 0.5) * 200.0
+            positions[i + 1] = 2.0 + rnd_in_float(0.0, 1.0) * 10.0
+            positions[i + 2] = rnd_in_float(-0.5, 0.5) * 200.0
+            col = rnd_in_float(0.0, 1.0)
+            colors[i] = col
+            colors[i + 1] = col
+            colors[i + 2] = col
 
-    for i in range(0, size * 3, 3):
-        positions[i] = rnd_in_float(-0.5, 0.5) * 200.0
-        positions[i + 1] = 2.0 + rnd_in_float(0.0, 1.0) * 10.0
-        positions[i + 2] = rnd_in_float(-0.5, 0.5) * 200.0
-        col = rnd_in_float(0.0, 1.0)
-        colors[i] = col
-        colors[i + 1] = col
-        colors[i + 2] = col
+        position_vbo = numpy.array(positions, dtype=numpy.float32)
+        color_vbo = numpy.array(colors, dtype=numpy.float32)
 
-    position_vbo = numpy.array(positions, dtype=numpy.float32)
-    color_vbo = numpy.array(colors, dtype=numpy.float32)
+        vao = VAO("debris")
+        vao.buffer(position_vbo, '3f', 'in_position')
+        vao.buffer(color_vbo, '3f', 'in_color')
 
-    vao = VAO("debris")
-    vao.buffer(position_vbo, '3f', 'in_position')
-    vao.buffer(color_vbo, '3f', 'in_color')
-
-    return vao
+        return vao
 
 
 def rnd_in_float(range_start, range_end):
