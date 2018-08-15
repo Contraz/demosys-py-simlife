@@ -18,17 +18,18 @@ WINDOW = {
     "cursor": True,
 }
 
-MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.ogg')
+MUSIC = os.path.join(PROJECT_DIR, 'resources/music/sim_life_128.mp3')
 
-# TIMER = 'demosys.timers.Timer'
-# TIMER = 'demosys.timers.MusicTimer'
-TIMER = 'demosys.timers.rocketmusic.Timer'
+# TIMER = 'demosys.timers.clock.Timer'
+# TIMER = 'demosys.timers.music.Timer'
+TIMER = 'demosys.timers.rocket.Timer'
+# TIMER = 'demosys.timers.rocketmusic.Timer'
 
 PROJECT = 'simlife.project.Project'
 
 ROCKET = {
-    # 'mode': 'editor',
-    'mode': 'project',
+    'mode': 'editor',
+    # 'mode': 'project',
     # 'mode': 'files',
     'rps': 20,  # row_rate from the old demo
     'project': os.path.join(PROJECT_DIR, 'resources/tracks.xml'),

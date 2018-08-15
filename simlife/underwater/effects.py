@@ -15,6 +15,10 @@ class UnderWaterEffect(Effect):
     runnable = True
 
     def __init__(self):
+        # Read by rocket timeline externally
+        self.rocket_timeline_track = self.get_track('ctrl:underwater')
+        self.rocket_timeline_order = 0
+
         mesh_size = 400
         self.floor = geometry.plane_xz(size=(mesh_size, mesh_size), resolution=(128, 128))
         self.floor_shader = self.get_program("floor")
@@ -76,8 +80,8 @@ class UnderWaterEffect(Effect):
         self.cam.position = Vector3([self.cam_x.time_value(time),
                                      self.cam_y.time_value(time),
                                      self.cam_z.time_value(time)])
-        self.cam.yaw = self.cam_yaw.time_value(time) - 90
         self.cam.pitch = -self.cam_pitch.time_value(time)
+        self.cam.yaw = self.cam_yaw.time_value(time) - 90
         m_mv = self.cam.view_matrix
 
         # Draw the floor and ocean
