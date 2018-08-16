@@ -33,10 +33,10 @@ in vec2 uv;
 
 void main() 
 {
-	vec2 texcoord = vec2(0.5, 0.5) + (uv + vec2(-0.5, -0.5) * scale) + position;
+	vec2 texcoord = (vec2(0.5, 0.5) + (uv + vec2(-0.5, -0.5)) * scale) + position;
 	fragColor = screen(
-        texture2D(source0, texcoord) * vec4(source0_opacity),
-        texture2D(source1, uv) * vec4(source1_opacity)
+        texture(source0, texcoord) * vec4(source0_opacity),
+        texture(source1, uv) * vec4(source1_opacity)
     );
 }
 #endif
