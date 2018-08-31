@@ -8,6 +8,14 @@ A python port the demo "Sim Life" using demosys-py.
 
 ## Project Structure
 
+### Local Dev
+
+```
+python3 -m virtualenv env
+./env/bin/activate
+pip install -r requirements.txt
+```
+
 ### Resources
 
 * Resources specific to an effect is located inside each respective effect package
